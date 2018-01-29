@@ -38,6 +38,11 @@ module.exports = class ClusterWorker {
     })
 
     this.worker.on('message', (message) => {
+      if (message.log) {
+        this.parent.log(this.logPrefix() + message.message, message.severity, message.meta || {})
+        return
+      }
+
       if (message.state) {
         this.state = message.state
         this.parent.log(this.logPrefix() + message.state, 'info')

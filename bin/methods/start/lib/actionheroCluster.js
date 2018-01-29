@@ -75,8 +75,8 @@ module.exports = class ActionHeroCluster {
     }
   }
 
-  log (message, severity) {
-    this.logger.log(severity, message)
+  log (message, severity, meta = {}) {
+    this.logger.log(severity, message, meta)
   }
 
   buildEnv (workerId) {

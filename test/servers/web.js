@@ -910,10 +910,17 @@ describe('Server: Web', () => {
     })
 
     it('\'all\' routes are duplicated properly', () => {
-      ['get', 'post', 'put', 'delete'].forEach((verb) => {
-        expect(api.routes.routes[verb][0].action).to.equal('user')
-        expect(api.routes.routes[verb][0].path).to.equal('/user/:userID')
+      api.routes.registerRoute('all', '/other-login', 'login')
+      let loaded = {}
+      let registered = {}
+      api.routes.verbs.forEach((verb) => {
+        api.routes.routes[verb].forEach((route) => {
+          if (!loaded[verb]) loaded[verb] = route.action === 'user' && route.path === '/user/:userID'
+          if (!registered[verb]) registered[verb] = route.action === 'login' && route.path === '/other-login'
+        })
       })
+      expect(Object.keys(loaded).length).to.equal(api.routes.verbs.length)
+      expect(Object.keys(registered).length).to.equal(api.routes.verbs.length)
     })
 
     it('unknown actions are still unknown', async () => {
@@ -941,6 +948,14 @@ describe('Server: Web', () => {
         let body = await toJson(error.response.body)
         expect(body.requesterInformation.receivedParams.action).to.equal('user')
       }
+    })
+
+    it('returns application/json when the mime type cannot be determined for an action', async () => {
+      let response = await request.get(url + '/api/mimeTestAction/thing.bogus', {resolveWithFullResponse: true})
+      expect(response.headers['content-type']).to.match(/json/)
+      let body = JSON.parse(response.body)
+      expect(body.matchedRoute.path).to.equal('/mimeTestAction/:key')
+      expect(body.matchedRoute.action).to.equal('mimeTestAction')
     })
 
     it('route actions have the matched route availalbe to the action', async () => {

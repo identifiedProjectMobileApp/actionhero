@@ -3,7 +3,6 @@
 const fs = require('fs')
 const path = require('path')
 const os = require('os')
-const {promisify} = require('util')
 const cluster = require('cluster')
 const readline = require('readline')
 const winston = require('winston')
@@ -94,7 +93,7 @@ module.exports = class ActionHeroCluster {
     if (stats.isDirectory() || stats.isSymbolicLink()) {
       return true
     } else {
-      await promisify(fs.mkdir)(p)
+      fs.mkdirSync(p)
     }
   }
 
@@ -122,6 +121,10 @@ module.exports = class ActionHeroCluster {
     }
 
     fs.unlinkSync(file)
+  }
+
+  async sleep (time) {
+    await new Promise((resolve) => { setTimeout(resolve, time) })
   }
 
   async start () {
@@ -206,7 +209,7 @@ module.exports = class ActionHeroCluster {
     if (this.workers.length === 0) {
       this.log('all workers stopped', 'notice')
       await this.clearPidFile()
-      await promisify(setTimeout)(100)
+      await this.sleep(100)
       process.exit()
     }
 
@@ -217,7 +220,7 @@ module.exports = class ActionHeroCluster {
 
     if (this.workers.length > 0) {
       this.log(this.workers.length + ' workers running, waiting on stop', 'info')
-      await promisify(setTimeout)(this.options.stopTimeout)
+      await this.sleep(this.options.stopTimeout)
       this.stop()
     }
   }
